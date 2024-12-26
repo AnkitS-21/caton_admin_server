@@ -95,6 +95,81 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// app.post("/api/approveUser", async (req, res) => {
+//   const { user, dataset } = req.body;
+
+//   try {
+//     const db = client.db("users_db");
+
+//     const sourceCollection = dataset === "New Users" ? "newusers" : "renew_users";
+//     const targetCollection = "users";
+
+//     const docPassword = crypto.randomBytes(8).toString("hex");
+//     const pharmaPassword = crypto.randomBytes(8).toString("hex");
+
+//     const passwordHashDoc = await bcrypt.hash(docPassword, 12);
+//     const passwordHashPharma = await bcrypt.hash(pharmaPassword, 12);
+
+//     const userDocument = {
+//       username: user.username || user.name.replace(/\s+/g, "").toLowerCase(),
+//       name: user.name,
+//       mobileOne: user.mobileOne || "Add Mobile One",
+//       mobileTwo: user.mobileTwo || "Add Mobile Two",
+//       qualifications: user.qualifications || "Add Qualification",
+//       regiNumber: user.regiNumber || "Add Registration Number",
+//       hospital: user.hospital || "Dynamic Hospital Name",
+//       address: user.address || "Default Address",
+//       email: user.email,
+//       password_hash_doc: passwordHashDoc,
+//       password_hash_pharma: passwordHashPharma,
+//       otp: null,
+//       otp_expiry: null,
+//     };
+
+//     const insertedUser = await db.collection(targetCollection).insertOne(userDocument);
+//     await db.collection(sourceCollection).deleteOne({ _id: new ObjectId(user._id) });
+
+//     // Prepare email content
+//     const mailOptions = {
+//       from: "catonhealthcare@gmail.com",
+//       to: user.email,
+//       subject: "Account Approved",
+//       text: `
+// Hello ${user.name},
+
+// Your account has been approved. Below are your credentials:
+
+// Username: ${user.username}
+// Doctor Password: ${docPassword}
+// Pharmacy Password: ${pharmaPassword}
+
+// Please log in to your account using these credentials.
+
+// Also change your password.
+
+// visit us: https://www.zipsoftwares.in/
+
+// Thank you,
+// Admin Team
+//       `,
+//     };
+
+//     // Send email
+//     await transporter.sendMail(mailOptions);
+
+//     console.log(`Email sent to ${user.email}`);
+//     res.json({
+//       message: "User approved and moved to the users collection.",
+//       user_id: insertedUser.insertedId,
+//       docPassword,
+//       pharmaPassword,
+//     });
+//   } catch (error) {
+//     console.error("Error approving user:", error);
+//     res.status(500).send("Server error");
+//   }
+// });
+
 app.post("/api/approveUser", async (req, res) => {
   const { user, dataset } = req.body;
 
@@ -103,6 +178,12 @@ app.post("/api/approveUser", async (req, res) => {
 
     const sourceCollection = dataset === "New Users" ? "newusers" : "renew_users";
     const targetCollection = "users";
+
+    // Check if the user is already approved
+    const existingUser = await db.collection(targetCollection).findOne({ email: user.email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User is already approved." });
+    }
 
     const docPassword = crypto.randomBytes(8).toString("hex");
     const pharmaPassword = crypto.randomBytes(8).toString("hex");
@@ -124,12 +205,13 @@ app.post("/api/approveUser", async (req, res) => {
       password_hash_pharma: passwordHashPharma,
       otp: null,
       otp_expiry: null,
+      isApproved: true, // Mark user as approved
     };
 
     const insertedUser = await db.collection(targetCollection).insertOne(userDocument);
     await db.collection(sourceCollection).deleteOne({ _id: new ObjectId(user._id) });
 
-    // Prepare email content
+    // Prepare and send email
     const mailOptions = {
       from: "catonhealthcare@gmail.com",
       to: user.email,
@@ -147,17 +229,16 @@ Please log in to your account using these credentials.
 
 Also change your password.
 
-visit us: https://www.zipsoftwares.in/
+Visit us: https://www.zipsoftwares.in/
 
 Thank you,
 Admin Team
       `,
     };
 
-    // Send email
     await transporter.sendMail(mailOptions);
-
     console.log(`Email sent to ${user.email}`);
+
     res.json({
       message: "User approved and moved to the users collection.",
       user_id: insertedUser.insertedId,
@@ -169,6 +250,7 @@ Admin Team
     res.status(500).send("Server error");
   }
 });
+
 
 app.get("/api/newusers", async (req, res) => {
   try {
