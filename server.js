@@ -139,10 +139,15 @@ Hello ${user.name},
 
 Your account has been approved. Below are your credentials:
 
+Username: ${user.username}
 Doctor Password: ${docPassword}
 Pharmacy Password: ${pharmaPassword}
 
 Please log in to your account using these credentials.
+
+Also change your password.
+
+visit us: https://www.zipsoftwares.in/
 
 Thank you,
 Admin Team
