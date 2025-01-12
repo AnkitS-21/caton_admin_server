@@ -191,6 +191,8 @@ app.post("/api/approveUser", async (req, res) => {
     const passwordHashDoc = await bcrypt.hash(docPassword, 12);
     const passwordHashPharma = await bcrypt.hash(pharmaPassword, 12);
 
+    const currentDate = new Date();
+
     const userDocument = {
       username: user.username || user.name.replace(/\s+/g, "").toLowerCase(),
       name: user.name,
@@ -206,6 +208,7 @@ app.post("/api/approveUser", async (req, res) => {
       otp: null,
       otp_expiry: null,
       isApproved: true, // Mark user as approved
+      approval_date: currentDate,
     };
 
     const insertedUser = await db.collection(targetCollection).insertOne(userDocument);
