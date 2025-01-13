@@ -209,6 +209,8 @@ app.post("/api/approveUser", async (req, res) => {
       otp_expiry: null,
       isApproved: true, // Mark user as approved
       approval_date: currentDate,
+      months: user.months,
+      total_price: user.total_price
     };
 
     const insertedUser = await db.collection(targetCollection).insertOne(userDocument);
