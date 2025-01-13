@@ -263,7 +263,7 @@ app.get("/api/newusers", async (req, res) => {
     const newUsers = await db
       .collection("new_subscriptions")
       .find()
-      .project({ _id: 1, name: 1, username: 1, email: 1, mobile: 1, subscription_date: 1 })
+      .project({ _id: 1, name: 1, username: 1, email: 1, mobile: 1, subscription_date: 1, months: 1, total_price: 1})
       .toArray();
     res.json(newUsers);
   } catch (error) {
